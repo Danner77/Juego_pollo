@@ -1,0 +1,115 @@
+import pygame
+import random
+
+# Inicializar Pygame
+pygame.init()
+
+# Definir colores
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+GRAY = (50,50,50)
+
+# Dimensiones de la pantalla
+WIDTH = 400
+HEIGHT = 600
+
+# Configuración de la ventana
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Test #1")
+
+# Clase para el jugador (la rana)
+class Frog(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.Surface((40, 40))
+        self.image.fill(WHITE)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH // 2, HEIGHT - 50)
+
+    def update(self, keys):
+        if keys[pygame.K_LEFT]:
+            self.rect.x -= 5
+        if keys[pygame.K_RIGHT]:
+            self.rect.x += 5
+        if keys[pygame.K_UP]:
+            self.rect.y -= 5
+        if keys[pygame.K_DOWN]:
+            self.rect.y += 5
+
+        # Limitar el movimiento del jugador dentro de la pantalla
+        if self.rect.x < 0:
+            self.rect.x = 0
+        if self.rect.x > WIDTH - 40:
+            self.rect.x = WIDTH - 40
+        if self.rect.y < 0:
+            self.rect.y = 0
+        if self.rect.y > HEIGHT - 50:
+            self.rect.y = HEIGHT - 50
+
+# Clase para los obstáculos (vehículos)
+class Car(pygame.sprite.Sprite):
+    def __init__(self, x, y, speed):
+        super().__init__()
+        self.image = pygame.Surface((60, 40))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.speed = speed
+
+    def update(self):
+        self.rect.x += self.speed
+        if self.rect.x > WIDTH:
+            self.rect.x = -60
+        if self.rect.x < -60:
+            self.rect.x = WIDTH
+
+# Crear instancias de los objetos
+frog = Frog()
+cars = pygame.sprite.Group()
+for i in range(5):
+    car = Car(random.randint(0, WIDTH - 60), random.randint(100, 500), random.choice([3, -3]))
+    cars.add(car)
+
+all_sprites = pygame.sprite.Group()
+all_sprites.add(frog)
+all_sprites.add(cars)
+
+# Reloj para controlar los FPS
+clock = pygame.time.Clock()
+
+# Bucle principal del juego
+running = True
+while running:
+    # Manejar eventos
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Actualizar los objetos
+    keys = pygame.key.get_pressed()
+    frog.update(keys)
+    cars.update()
+
+    # Colisiones (si la rana toca un coche, el juego termina)
+    if pygame.sprite.spritecollide(frog, cars, False):
+        print("¡Te han atropellado!")
+        running = False
+
+    # Dibujar todo en la pantalla
+    screen.fill(GRAY)
+    all_sprites.draw(screen)
+
+
+
+    # Actualizar la pantalla
+    pygame.display.flip()
+
+    # Controlar los FPS
+    clock.tick(60)
+
+# Salir de Pygame
+pygame.quit()
